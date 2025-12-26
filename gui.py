@@ -18,12 +18,16 @@ class DrowsinessGUI:
     def __init__(self, face_detector, alert_system):
         self.detector = face_detector
         self.alert = alert_system
-        
+
+        # 1️⃣ Tao cua so chinh TRUOC
         self.root = tk.Tk()
         self.root.title("He Thong Canh Bao Tai Xe Ngu Gat")
         self.root.configure(bg='#1a1a2e')
         self.root.resizable(False, False)
-        
+
+        # 2️⃣ SAU DO moi tao bien Tkinter
+        self.mode_var = tk.StringVar(value="student")
+
         self.cap = None
         self.running = False
         
@@ -160,6 +164,27 @@ class DrowsinessGUI:
                                     highlightthickness=0, command=self.update_thresholds)
         self.time_scale.set(2.0)
         self.time_scale.pack(side=tk.RIGHT)
+        mode_frame = ttk.Frame(settings_frame)
+        mode_frame.pack(fill=tk.X, pady=5)
+
+        ttk.Label(mode_frame, text="Che do su dung:").pack(side=tk.LEFT)
+
+        ttk.Radiobutton(
+            mode_frame,
+            text="Sinh vien (5s)",
+            variable=self.mode_var,
+            value="student",
+            command=self.update_mode
+        ).pack(side=tk.LEFT, padx=5)
+
+        ttk.Radiobutton(
+            mode_frame,
+            text="Tai xe (2s)",
+            variable=self.mode_var,
+            value="driver",
+            command=self.update_mode
+        ).pack(side=tk.LEFT, padx=5)
+
         
         # Buttons
         btn_frame = ttk.Frame(main_frame)
@@ -261,6 +286,21 @@ class DrowsinessGUI:
             time_thresh=self.time_scale.get()
         )
     
+    def update_mode(self):
+        mode = self.mode_var.get()
+        self.alert.set_mode(mode)
+
+        if mode == "student":
+            self.status_label.config(
+                text="Che do: Sinh vien (Canh bao sau 5s)",
+                foreground="#00d4ff"
+            )
+        else:
+            self.status_label.config(
+                text="Che do: Tai xe (Canh bao sau 2s)",
+                foreground="#ff6b6b"
+            )
+
     def toggle_camera(self):
         if not self.running:
             self.start_camera()
@@ -323,7 +363,16 @@ class DrowsinessGUI:
                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 1)
             cv2.putText(annotated_frame, f"MAR: {mar:.2f}", (10, 100),
                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 255), 1)
-            
+            cv2.putText(
+                annotated_frame,
+                f"MODE: {self.mode_var.get().upper()}",
+                (10, 175),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.5,
+                (255, 255, 0),
+                2
+            )
+
             # Hien thi khi dang ngap
             if mar > 0.6:
                 cv2.putText(annotated_frame, "DANG NGAP!", (10, 125),
